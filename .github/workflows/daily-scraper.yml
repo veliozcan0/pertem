@@ -6,6 +6,10 @@ on:
     - cron: '0 9 * * *'
   workflow_dispatch: # Manuel çalıştırma için
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   scrape-msb-data:
     runs-on: ubuntu-latest
@@ -13,7 +17,9 @@ jobs:
     steps:
     - name: Repository'yi checkout et
       uses: actions/checkout@v4
-      
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
     - name: Python kurulumu
       uses: actions/setup-python@v4
       with:
@@ -28,18 +34,23 @@ jobs:
       run: |
         python scraper-actions.py
         
+    - name: Git konfigürasyonu
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
     - name: Değişiklikleri commit et
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
         git add data/
-        git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Günlük MSB veri güncellemesi - $(date +'%Y-%m-%d')"
+        if git diff --staged --quiet; then
+          echo "Değişiklik yok, commit atlanıyor"
+        else
+          git commit -m "🤖 Günlük MSB veri güncellemesi - $(date +'%Y-%m-%d')"
+        fi
         
     - name: GitHub'a push et
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+      run: |
+        git push origin main
         
     - name: Sonuçları özetle
       run: |
