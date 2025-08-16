@@ -13,6 +13,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 import time
+import re
 
 class MSBEmailNotifier:
     def __init__(self, config_file='email_config.json'):
@@ -71,6 +72,55 @@ class MSBEmailNotifier:
         data_str = json.dumps(data, sort_keys=True, ensure_ascii=False)
         return hashlib.md5(data_str.encode()).hexdigest()
     
+    def parse_date(self, date_str):
+        """Farklı tarih formatlarını parse et"""
+        if not date_str:
+            return None
+            
+        # ISO format (2024-12-15T10:30:00)
+        try:
+            return datetime.fromisoformat(date_str)
+        except ValueError:
+            pass
+        
+        # Türkçe format (15.12.2024)
+        try:
+            if re.match(r'\d{2}\.\d{2}\.\d{4}', date_str):
+                return datetime.strptime(date_str, '%d.%m.%Y')
+        except ValueError:
+            pass
+        
+        # Türkçe format (15.12.2024 10:30)
+        try:
+            if re.match(r'\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}', date_str):
+                return datetime.strptime(date_str, '%d.%m.%Y %H:%M')
+        except ValueError:
+            pass
+        
+        # Türkçe format (15.12.2024 10:30:00)
+        try:
+            if re.match(r'\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}', date_str):
+                return datetime.strptime(date_str, '%d.%m.%Y %H:%M:%S')
+        except ValueError:
+            pass
+        
+        # Standart format (15/12/2024)
+        try:
+            if re.match(r'\d{2}/\d{2}/\d{4}', date_str):
+                return datetime.strptime(date_str, '%d/%m/%Y')
+        except ValueError:
+            pass
+        
+        # YYYY-MM-DD format
+        try:
+            if re.match(r'\d{4}-\d{2}-\d{2}', date_str):
+                return datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            pass
+        
+        print(f"⚠️  Tarih formatı tanınamadı: {date_str}")
+        return None
+    
     def check_for_new_items(self):
         """Yeni öğeleri kontrol et"""
         if not os.path.exists(self.data_file):
@@ -105,15 +155,15 @@ class MSBEmailNotifier:
             # Teminler
             if 'guncel_teminler' in current_data:
                 for temin in current_data['guncel_teminler']:
-                    temin_time = datetime.fromisoformat(temin['tarih'])
-                    if temin_time > last_email_time:
+                    temin_time = self.parse_date(temin.get('tarih'))
+                    if temin_time and temin_time > last_email_time:
                         new_teminler.append(temin)
             
             # Duyurular
             if 'guncel_duyurular' in current_data:
                 for duyuru in current_data['guncel_duyurular']:
-                    duyuru_time = datetime.fromisoformat(duyuru['tarih'])
-                    if duyuru_time > last_email_time:
+                    duyuru_time = self.parse_date(duyuru.get('tarih'))
+                    if duyuru_time and duyuru_time > last_email_time:
                         new_duyurular.append(duyuru)
             
             return new_teminler, new_duyurular
