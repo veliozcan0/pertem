@@ -58,3 +58,52 @@ jobs:
         echo "📅 Çalışma zamanı: $(date)"
         echo "📁 Veri klasörü güncellendi"
         echo "💾 Yedek dosyalar oluşturuldu"
+
+  email-notification:
+    needs: scrape-msb-data
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Repository'yi checkout et
+      uses: actions/checkout@v4
+
+    - name: Python kurulumu
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Email bildirim sistemini çalıştır
+      env:
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+        RECIPIENTS: ${{ secrets.RECIPIENTS }}
+      run: |
+        # Email konfigürasyonunu güncelle
+        python -c "
+        import json
+        config = {
+            'smtp_server': '${{ secrets.SMTP_SERVER }}',
+            'smtp_port': int('${{ secrets.SMTP_PORT }}'),
+            'sender_email': '${{ secrets.SENDER_EMAIL }}',
+            'sender_password': '${{ secrets.SENDER_PASSWORD }}',
+            'recipients': '${{ secrets.RECIPIENTS }}'.split(','),
+            'check_interval': 3600,
+            'max_items_per_email': 10,
+            'email_subject_prefix': '🚀 MSB Scraper - Yeni ',
+            'include_old_items': False,
+            'old_items_days': 7
+        }
+        with open('email_config.json', 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+        "
+        
+        # Email bildirim sistemini çalıştır
+        python email_notifier.py --check
+
+    - name: Email bildirim sonucu
+      run: |
+        echo "📧 Email bildirim sistemi çalıştırıldı"
+        echo "📨 Yeni öğeler varsa email gönderildi"

@@ -1,0 +1,15 @@
+{
+  "smtp_server": "smtp.gmail.com",
+  "smtp_port": 587,
+  "sender_email": "veliiozcan@gmail.com",
+  "sender_password": "ihac yvtb loxc ymfe",
+  "recipients": [
+    "veliiozcan@gmail.com",
+    "veliozcaniletisim@gmail.com"
+  ],
+  "check_interval": 3600,
+  "max_items_per_email": 10,
+  "email_subject_prefix": "🚀 MSB Scraper - Yeni ",
+  "include_old_items": false,
+  "old_items_days": 7
+}
