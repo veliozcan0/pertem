@@ -704,8 +704,8 @@
                     
                     teminlerContainer.innerHTML = filteredTeminler.map(temin => `
                         <div class="data-item">
-                            <div class="data-title">${temin.baslik}</div>
-                            <div class="data-description">${temin.aciklama || 'Açıklama bulunamadı'}</div>
+                            <div class="data-title">${temin.başlık}</div>
+                            <div class="data-description">${temin.açıklama || 'Açıklama bulunamadı'}</div>
                             <div class="data-date">📅 ${temin.tarih}</div>
                             ${temin.link ? `<div><a href="${temin.link}" target="_blank" class="data-link">🔗 Detayları Görüntüle</a></div>` : ''}
                         </div>
@@ -734,8 +734,8 @@
                     
                     duyurularContainer.innerHTML = filteredDuyurular.map(duyuru => `
                         <div class="data-item">
-                            <div class="data-title">${duyuru.baslik}</div>
-                            <div class="data-description">${duyuru.aciklama || 'Açıklama bulunamadı'}</div>
+                            <div class="data-title">${duyuru.başlık}</div>
+                            <div class="data-description">${duyuru.açıklama || 'Açıklama bulunamadı'}</div>
                             <div class="data-date">📅 ${duyuru.tarih}</div>
                             ${duyuru.link ? `<div><a href="${duyuru.link}" target="_blank" class="data-link">🔗 Detayları Görüntüle</a></div>` : ''}
                         </div>
